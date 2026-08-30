@@ -12,13 +12,18 @@ const Projects = () => {
       try {
         const response = await axios.get('http://localhost:8080/api/projects');
         
-        // Your backend wraps data inside response.data.data
-        const allProjects = response.data.data; 
-        setProjects(allProjects);
+        // 1. Get the data. Your backend wraps it, so we use response.data.data
+        const allProjects = response.data.data || []; 
+        
+        // 2. ONLY show projects that are APPROVED by Admin!
+        const approvedProjects = allProjects.filter(proj => proj.approved === true);
+        
+        // 3. Set the state
+        setProjects(approvedProjects);
         
       } catch (err) {
-        console.error("Error fetching projects:", err);
-        setError("Could not load projects from database.");
+        console.error("Detailed error:", err.response ? err.response.data : err.message); // Logs the actual error!
+        setError("Could not load projects from database. Please make sure your backend is running on port 8080.");
         setProjects([]);
       } finally {
         setLoading(false);
@@ -41,7 +46,7 @@ const Projects = () => {
         {error && <p className="text-center text-orange-500 mb-4">{error}</p>}
 
         {projects.length === 0 ? (
-          <p className="text-center text-gray-600 py-10">No projects available yet.</p>
+          <p className="text-center text-gray-600 py-10">No approved projects available yet.</p>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {projects.map((project) => (

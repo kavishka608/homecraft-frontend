@@ -1,5 +1,5 @@
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom'; // <--- Added Navigate here
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import './App.css'; 
 import Navbar from './components/layout/Navbar';
 import Footer from './components/layout/Footer';
@@ -11,8 +11,11 @@ import Register from './pages/Register';
 import AdminDashboard from './pages/AdminDashboard';
 import AdminApprovals from './pages/AdminApprovals';
 import PortfolioUpload from './pages/PortfolioUpload';
-import ProfessionalProfile from './pages/ProfessionalProfile'; // <--- Fixed path (removed leading slash)
-
+import ProfessionalProfile from './pages/ProfessionalProfile';
+import Profile from './pages/Profile';
+import HomeownerDashboard from './pages/HomeownerDashboard'; // <--- MUST ADD THIS!
+import PostProject from './pages/PostProject'; // <--- MUST ADD THIS!
+import MyBids from './pages/MyBids';
 // This component checks if the user is an Admin
 const ProtectedAdminRoute = ({ children }) => {
   const role = localStorage.getItem('role');
@@ -31,12 +34,18 @@ function App() {
           <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/professionals" element={<Professionals />} />
-            <Route path="/professionals/:id" element={<ProfessionalProfile />} /> {/* <--- Added this route */}
+            <Route path="/professionals/:id" element={<ProfessionalProfile />} />
             <Route path="/projects" element={<Projects />} />
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
             <Route path="/portfolio" element={<PortfolioUpload />} />
-            
+            <Route path="/profile" element={<Profile />} />
+            <Route path="/my-bids" element={<MyBids />} />
+
+            {/* Homeowner Routes */}
+            <Route path="/post-project" element={<PostProject />} /> 
+            <Route path="/my-projects" element={<HomeownerDashboard />} /> {/* <--- THIS LINE FIXES YOUR ERROR! */}
+
             {/* PROTECTED ADMIN ROUTES */}
             <Route path="/admin/dashboard" element={
               <ProtectedAdminRoute>

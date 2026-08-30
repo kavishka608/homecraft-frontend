@@ -1,37 +1,21 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import axios from 'axios';
+import { FaSearch, FaFolder, FaLock, FaCog, FaUser, FaShieldAlt, FaHome } from 'react-icons/fa';
 
 const AdminDashboard = () => {
   const [users, setUsers] = useState([]);
-  const [totalUsers, setTotalUsers] = useState(0);
-  const [activeProfessionals, setActiveProfessionals] = useState(0);
-  const [pendingApprovals, setPendingApprovals] = useState(0);
-  const [projects, setProjects] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState('');
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        // Get all users from backend
-        const usersResponse = await axios.get('http://localhost:8080/api/admin/pending-professionals'); // For demo, we'll use this endpoint to get some data
-        // In the future you will have a /api/admin/users endpoint. For now, let's count manually.
+        const usersResponse = await axios.get('http://localhost:8080/api/admin/pending-professionals');
         
-        // Note: The following counts are examples. You will need to add specific backend endpoints to get exact numbers.
-        // But we can at least show real professionals.
-        const allProfessionals = usersResponse.data;
-        const pending = allProfessionals.filter(p => p.verificationStatus === 'PENDING').length;
-        const active = allProfessionals.filter(p => p.verificationStatus === 'APPROVED').length;
-
-        setPendingApprovals(pending);
-        setActiveProfessionals(active);
-        setUsers(allProfessionals); // Show real professionals in the table
-        setTotalUsers(allProfessionals.length);
-
-        // Fetch projects count (if you have an endpoint for it)
-        // const projectsResponse = await axios.get('http://localhost:8080/api/projects');
-        // setProjects(projectsResponse.data.length);
-
+        // If it's wrapped in response.data, use that, otherwise use the array directly
+        setUsers(Array.isArray(usersResponse.data) ? usersResponse.data : usersResponse.data.data || []);
+        
       } catch (error) {
         console.error("Error fetching admin data:", error);
       } finally {
@@ -42,99 +26,122 @@ const AdminDashboard = () => {
     fetchData();
   }, []);
 
+  // Filter users based on search
+  const filteredUsers = users.filter((user) =>
+    (user.fullName || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+    (user.email || '').toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  // Get counts
+  const pendingCount = users.filter(u => u.verificationStatus === 'PENDING').length;
+  const approvedCount = users.filter(u => u.verificationStatus === 'APPROVED').length;
+
   if (loading) {
     return <div className="min-h-screen flex justify-center items-center text-2xl text-gray-500">Loading Dashboard...</div>;
   }
 
   return (
-    <div className="min-h-screen bg-gray-100">
-      {/* Admin Header */}
-      <div className="bg-gray-900 text-white py-6 px-8">
-        <h1 className="text-3xl font-bold">Admin Control Center</h1>
-        <p className="text-gray-400 mt-2">Manage HomeCraft professionals, projects, and users.</p>
-      </div>
-
-      <div className="container mx-auto px-8 py-10">
-        {/* Quick Action Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
-          <Link to="/admin/approvals" className="bg-white p-6 rounded-xl shadow-lg hover:shadow-xl transition">
-            <div className="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center text-orange-600 text-2xl mb-4">
-              ⏳
-            </div>
-            <h3 className="text-xl font-semibold text-gray-800">Pending Approvals</h3>
-            <p className="text-gray-600 mt-2">Approve or reject new professional registrations.</p>
-          </Link>
-
-          <div className="bg-white p-6 rounded-xl shadow-lg hover:shadow-xl transition">
-            <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center text-blue-600 text-2xl mb-4">
-              👷
-            </div>
-            <h3 className="text-xl font-semibold text-gray-800">Manage Professionals</h3>
-            <p className="text-gray-600 mt-2">View and manage all active professionals.</p>
+    <div className="flex min-h-screen bg-gray-100">
+      
+      {/* Left Sidebar (LastPass Style) */}
+      <aside className="w-64 bg-gray-800 text-white flex flex-col">
+        <div className="p-6 text-2xl font-bold border-b border-gray-700">
+          Home<span className="text-red-500">Craft</span>
+        </div>
+        
+        <nav className="flex-1 py-6">
+          <div className="w-full flex items-center gap-3 px-6 py-3 text-left text-white bg-gray-700 border-l-4 border-red-500 transition">
+            <FaShieldAlt /> Dashboard
           </div>
+          <Link to="/admin/approvals" className="block w-full flex items-center gap-3 px-6 py-3 text-left text-gray-300 hover:bg-gray-700 transition">
+            <FaLock /> Approvals
+          </Link>
+          <div className="w-full flex items-center gap-3 px-6 py-3 text-left text-gray-300 hover:bg-gray-700 transition">
+            <FaUser /> Users
+          </div>
+          <div className="w-full flex items-center gap-3 px-6 py-3 text-left text-gray-300 hover:bg-gray-700 transition">
+            <FaFolder /> Projects
+          </div>
+          <div className="w-full flex items-center gap-3 px-6 py-3 text-left text-gray-300 hover:bg-gray-700 transition">
+            <FaCog /> Settings
+          </div>
+          <Link to="/" className="block w-full flex items-center gap-3 px-6 py-3 text-left text-gray-300 hover:bg-gray-700 transition">
+            <FaHome /> Frontend
+          </Link>
+        </nav>
 
-          <div className="bg-white p-6 rounded-xl shadow-lg hover:shadow-xl transition">
-            <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center text-green-600 text-2xl mb-4">
-              📊
+        <div className="p-6 border-t border-gray-700 text-sm text-gray-400">
+          Logged in as Admin
+        </div>
+      </aside>
+
+      {/* Main Content Area */}
+      <main className="flex-1 p-8">
+        
+        {/* Top Bar with Search (LastPass Style) */}
+        <div className="bg-white rounded-xl shadow-md p-4 mb-8 flex items-center justify-between">
+          <h1 className="text-2xl font-bold text-gray-800">Vault</h1>
+          <div className="flex items-center gap-4">
+            <div className="relative w-72">
+              <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+              <input 
+                type="text" 
+                placeholder="Search users..." 
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500"
+              />
             </div>
-            <h3 className="text-xl font-semibold text-gray-800">System Stats</h3>
-            <p className="text-gray-600 mt-2">Monitor overall platform health and usage.</p>
+            <div className="flex items-center gap-2 bg-gray-100 rounded-full px-4 py-2">
+              <FaUser className="text-gray-600" />
+              <span className="text-sm font-semibold text-gray-700">Admin</span>
+            </div>
           </div>
         </div>
 
-        {/* Real Stats Row */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-10">
+        {/* Quick Stats */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
           <div className="bg-blue-600 text-white p-6 rounded-xl shadow-lg">
             <p className="text-sm opacity-80">Total Users</p>
-            <p className="text-3xl font-bold mt-2">{totalUsers}</p>
+            <p className="text-3xl font-bold mt-2">{users.length}</p>
           </div>
           <div className="bg-green-600 text-white p-6 rounded-xl shadow-lg">
             <p className="text-sm opacity-80">Active Professionals</p>
-            <p className="text-3xl font-bold mt-2">{activeProfessionals}</p>
+            <p className="text-3xl font-bold mt-2">{approvedCount}</p>
           </div>
           <div className="bg-orange-500 text-white p-6 rounded-xl shadow-lg">
             <p className="text-sm opacity-80">Pending Approvals</p>
-            <p className="text-3xl font-bold mt-2">{pendingApprovals}</p>
-          </div>
-          <div className="bg-purple-600 text-white p-6 rounded-xl shadow-lg">
-            <p className="text-sm opacity-80">Total Projects</p>
-            <p className="text-3xl font-bold mt-2">{projects}</p>
+            <p className="text-3xl font-bold mt-2">{pendingCount}</p>
           </div>
         </div>
 
-        {/* Real Recent Registrations Table */}
-        <div className="bg-white rounded-xl shadow-lg overflow-hidden">
-          <h2 className="text-xl font-bold text-gray-800 p-6 border-b border-gray-100">Recent Registrations</h2>
-          <table className="w-full text-left">
-            <thead>
-              <tr className="bg-gray-50 border-b border-gray-200">
-                <th className="px-6 py-3 text-xs font-medium text-gray-500 uppercase">Name</th>
-                <th className="px-6 py-3 text-xs font-medium text-gray-500 uppercase">Email</th>
-                <th className="px-6 py-3 text-xs font-medium text-gray-500 uppercase">Role</th>
-                <th className="px-6 py-3 text-xs font-medium text-gray-500 uppercase">Status</th>
-              </tr>
-            </thead>
-            <tbody>
-              {users.length === 0 ? (
-                <tr>
-                  <td colSpan="4" className="px-6 py-4 text-center text-gray-500">No users found.</td>
-                </tr>
-              ) : (
-                users.map((user) => (
-                  <tr key={user.id} className="border-b border-gray-100">
-                    <td className="px-6 py-4 text-sm text-gray-900">{user.fullName}</td>
-                    <td className="px-6 py-4 text-sm text-gray-600">{user.email}</td>
-                    <td className="px-6 py-4 text-sm text-blue-600">{user.role || user.userRole || 'PROFESSIONAL'}</td>
-                    <td className="px-6 py-4 text-sm text-green-600">
-                      {user.verificationStatus === 'APPROVED' ? 'Active' : 'Pending'}
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
+        {/* Grid of Cards (LastPass Style) */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+          {filteredUsers.length === 0 ? (
+            <p className="text-gray-500 col-span-full text-center py-10">No users found.</p>
+          ) : (
+            filteredUsers.map((user) => (
+              <div key={user.id} className="bg-white rounded-xl shadow-md hover:shadow-xl transition p-6 border border-gray-200">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center">
+                    <FaUser className="text-blue-600 text-xl" />
+                  </div>
+                  <span className={`text-xs font-bold px-2 py-1 rounded-full ${
+                    user.verificationStatus === 'APPROVED' ? 'bg-green-100 text-green-700' : 'bg-orange-100 text-orange-600'
+                  }`}>
+                    {user.verificationStatus || 'Active'}
+                  </span>
+                </div>
+                <h3 className="font-bold text-gray-800 text-lg">{user.fullName || 'Unknown'}</h3>
+                <p className="text-sm text-gray-500 mb-4">{user.professionalType || 'User'}</p>
+                <div className="border-t border-gray-100 pt-3">
+                  <p className="text-xs text-gray-400 truncate">{user.email}</p>
+                </div>
+              </div>
+            ))
+          )}
         </div>
-      </div>
+      </main>
     </div>
   );
 };
