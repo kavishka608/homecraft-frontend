@@ -3,7 +3,7 @@ import axios from 'axios';
 import { FaDollarSign, FaClock, FaCheckCircle, FaTimesCircle } from 'react-icons/fa';
 
 const MyBids = () => {
-  const [bids, setBids] = useState([]);
+  const [bids, setBids] = useState([]); // Start with empty array
   const [loading, setLoading] = useState(true);
 
   const token = localStorage.getItem('token');
@@ -14,9 +14,25 @@ const MyBids = () => {
         const response = await axios.get('http://localhost:8080/api/bids/my-bids', {
           headers: { Authorization: `Bearer ${token}` }
         });
-        setBids(response.data || []);
+
+        // 🚨 CRITICAL FIX: Check if the data is an array!
+        // If the backend wraps it, we need to extract the array from response.data
+        let bidsData = response.data;
+        
+        // If it's wrapped inside an object (e.g., {success: true, data: [...]}), extract the array
+        if (bidsData && !Array.isArray(bidsData) && Array.isArray(bidsData.data)) {
+          bidsData = bidsData.data;
+        }
+        
+        // If it's still not an array, set it to an empty array
+        if (!Array.isArray(bidsData)) {
+          bidsData = [];
+        }
+
+        setBids(bidsData);
       } catch (error) {
         console.error("Error fetching my bids:", error);
+        setBids([]); // Always ensure it's an array on error
       } finally {
         setLoading(false);
       }
@@ -42,7 +58,7 @@ const MyBids = () => {
               {bids.map((bid) => (
                 <div key={bid.id} className="bg-white rounded-xl shadow-lg p-6 flex justify-between items-center">
                   <div>
-                    <h3 className="text-xl font-bold text-gray-800 mb-1">{bid.project.title}</h3>
+                    <h3 className="text-xl font-bold text-gray-800 mb-1">{bid.project?.title || 'Unknown Project'}</h3>
                     <p className="text-gray-600 mb-2">{bid.message}</p>
                     <div className="flex gap-4 text-sm">
                       <p className="text-green-600 font-bold flex items-center gap-1">
