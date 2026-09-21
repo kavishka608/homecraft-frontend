@@ -1,14 +1,15 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { FaBell, FaSignOutAlt, FaChevronDown, FaBars, FaTimes } from 'react-icons/fa';
 
 const Navbar = () => {
   const [role, setRole] = useState(null);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [menuOpen, setMenuOpen] = useState(false); // For mobile
-  const [accountOpen, setAccountOpen] = useState(false); // For dropdown
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [accountOpen, setAccountOpen] = useState(false);
 
   const navigate = useNavigate();
-  const dropdownRef = useRef(null); // To detect clicks outside
+  const dropdownRef = useRef(null);
 
   useEffect(() => {
     const storedRole = localStorage.getItem('role');
@@ -19,7 +20,6 @@ const Navbar = () => {
     }
   }, []);
 
-  // Close dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
@@ -37,140 +37,227 @@ const Navbar = () => {
     localStorage.removeItem('fullName');
     setIsLoggedIn(false);
     setRole(null);
+    setAccountOpen(false);
+    setMenuOpen(false);
     navigate('/');
   };
 
   return (
-    <nav className="bg-white shadow-lg sticky top-0 z-50">
-      <div className="container mx-auto px-4">
+    <nav className="sticky top-0 z-50 bg-warmgray-50/80 backdrop-blur-md border-b border-warmgray-200">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
-          
+
           {/* Logo */}
-          <Link to="/" className="flex items-center space-x-2 shrink-0">
-            <span className="text-2xl font-bold text-blue-600">🏠</span>
-            <span className="text-xl font-bold text-gray-800 hidden sm:block">HomeCraft</span>
+          <Link to="/" className="flex items-center gap-2 shrink-0">
+            <div className="w-9 h-9 rounded-xl bg-brand-600 flex items-center justify-center text-white text-lg shadow-soft">
+              🏠
+            </div>
+            <span className="text-lg font-bold text-slate-800 hidden sm:block">
+              Home<span className="text-brand-600">Craft</span>
+            </span>
           </Link>
 
-          {/* Desktop Navigation */}
-          <div className="hidden md:flex items-center space-x-6">
-            <Link to="/" className="text-gray-700 hover:text-blue-600">Home</Link>
-            <Link to="/professionals" className="text-gray-700 hover:text-blue-600">Professionals</Link>
-            <Link to="/projects" className="text-gray-700 hover:text-blue-600">Projects</Link>
-            
-            {/* Admin Links */}
+          {/* Desktop Nav — pill group */}
+          <div className="hidden md:flex items-center gap-1 bg-warmgray-100 rounded-full p-1 border border-warmgray-200">
+            <Link
+              to="/"
+              className="px-4 py-1.5 rounded-full text-sm font-medium text-slate-700 hover:bg-white hover:text-brand-700 hover:shadow-soft transition"
+            >
+              Home
+            </Link>
+            <Link
+              to="/professionals"
+              className="px-4 py-1.5 rounded-full text-sm font-medium text-slate-700 hover:bg-white hover:text-brand-700 hover:shadow-soft transition"
+            >
+              Professionals
+            </Link>
+            <Link
+              to="/projects"
+              className="px-4 py-1.5 rounded-full text-sm font-medium text-slate-700 hover:bg-white hover:text-brand-700 hover:shadow-soft transition"
+            >
+              Projects
+            </Link>
+
             {role === 'ADMIN' && (
-              <>
-                <Link to="/admin/dashboard" className="text-orange-600 font-bold hover:text-orange-700">Admin</Link>
-              </>
+              <Link
+                to="/admin/dashboard"
+                className="px-4 py-1.5 rounded-full text-sm font-semibold text-brand-700 bg-brand-100 hover:bg-brand-200 transition"
+              >
+                Admin
+              </Link>
             )}
 
-            {/* Homeowner Links */}
             {isLoggedIn && role === 'HOMEOWNER' && (
               <>
-                <Link to="/post-project" className="text-blue-600 font-bold hover:text-blue-700">+ Post Project</Link>
-                <Link to="/my-projects" className="text-gray-700 hover:text-blue-600">My Projects</Link>
+                <Link
+                  to="/post-project"
+                  className="px-4 py-1.5 rounded-full text-sm font-semibold text-brand-700 bg-brand-100 hover:bg-brand-200 transition"
+                >
+                  + Post Project
+                </Link>
+                <Link
+                  to="/my-projects"
+                  className="px-4 py-1.5 rounded-full text-sm font-medium text-slate-700 hover:bg-white hover:text-brand-700 hover:shadow-soft transition"
+                >
+                  My Projects
+                </Link>
               </>
             )}
 
-            {/* Professional Links */}
             {isLoggedIn && role === 'PROFESSIONAL' && (
               <>
-                <Link to="/portfolio" className="text-gray-700 hover:text-blue-600">Portfolio</Link>
-                <Link to="/my-bids" className="text-gray-700 hover:text-blue-600">My Bids</Link>
-              </>
-            )}
-
-            {/* Auth Buttons */}
-            {!isLoggedIn && (
-              <>
-                <Link to="/login" className="text-gray-700 hover:text-blue-600">Login</Link>
-                <Link to="/register" className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700">Register</Link>
+                <Link
+                  to="/portfolio"
+                  className="px-4 py-1.5 rounded-full text-sm font-medium text-slate-700 hover:bg-white hover:text-brand-700 hover:shadow-soft transition"
+                >
+                  Portfolio
+                </Link>
+                <Link
+                  to="/my-bids"
+                  className="px-4 py-1.5 rounded-full text-sm font-medium text-slate-700 hover:bg-white hover:text-brand-700 hover:shadow-soft transition"
+                >
+                  My Bids
+                </Link>
               </>
             )}
           </div>
 
-          {/* Logged In User Menu (Desktop) */}
-          {isLoggedIn && (
-            <div className="hidden md:flex items-center space-x-4">
-              {/* Dropdown */}
-              <div className="relative" ref={dropdownRef}>
-                <button 
-                  onClick={() => setAccountOpen(!accountOpen)}
-                  className="flex items-center space-x-2 focus:outline-none"
+          {/* Right side */}
+          <div className="flex items-center gap-3">
+
+            {/* Not logged in */}
+            {!isLoggedIn && (
+              <div className="hidden md:flex items-center gap-2">
+                <Link
+                  to="/login"
+                  className="px-4 py-2 text-sm font-medium text-slate-700 hover:text-brand-700 transition"
                 >
-                  <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center text-white font-bold">
-                    {localStorage.getItem('fullName')?.charAt(0) || 'U'}
-                  </div>
-                  <span className="text-sm font-semibold text-gray-700 hidden lg:block">
-                    {localStorage.getItem('fullName')?.split(' ')[0] || 'User'}
-                  </span>
-                  <svg className="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
-                  </svg>
+                  Login
+                </Link>
+                <Link
+                  to="/register"
+                  className="px-5 py-2 rounded-full bg-brand-600 text-white text-sm font-semibold hover:bg-brand-700 shadow-soft transition"
+                >
+                  Register
+                </Link>
+              </div>
+            )}
+
+            {/* Logged in — avatar + dropdown */}
+            {isLoggedIn && (
+              <div className="hidden md:flex items-center gap-3">
+                {/* Notifications */}
+                <button className="relative p-2 rounded-full text-slate-600 hover:bg-warmgray-100 transition">
+                  <FaBell className="text-lg" />
+                  <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full" />
                 </button>
 
-                {accountOpen && (
-                  <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-xl border border-gray-100 py-2">
-                    <Link to="/profile" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">My Profile</Link>
-                    <button 
-                      onClick={handleLogout}
-                      className="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50"
-                    >
-                      Logout
-                    </button>
-                  </div>
-                )}
-              </div>
-            </div>
-          )}
+                {/* Account dropdown */}
+                <div className="relative" ref={dropdownRef}>
+                  <button
+                    onClick={() => setAccountOpen(!accountOpen)}
+                    className="flex items-center gap-2 pl-1 pr-3 py-1 rounded-full bg-white border border-warmgray-200 hover:border-brand-300 hover:shadow-soft transition"
+                  >
+                    <div className="w-8 h-8 rounded-full bg-brand-600 text-white flex items-center justify-center font-bold text-sm">
+                      {localStorage.getItem('fullName')?.charAt(0)?.toUpperCase() || 'U'}
+                    </div>
+                    <span className="text-sm font-semibold text-slate-700 hidden lg:block">
+                      {localStorage.getItem('fullName')?.split(' ')[0] || 'User'}
+                    </span>
+                    <FaChevronDown className={`text-xs text-slate-400 transition-transform ${accountOpen ? 'rotate-180' : ''}`} />
+                  </button>
 
-          {/* Mobile Menu Button */}
-          <button className="md:hidden" onClick={() => setMenuOpen(!menuOpen)}>
-            <svg className="w-6 h-6 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16M4 18h16" />
-            </svg>
-          </button>
+                  {accountOpen && (
+                    <div className="absolute right-0 mt-2 w-52 bg-white rounded-xl shadow-card border border-warmgray-200 py-2 overflow-hidden">
+                      <div className="px-4 py-3 border-b border-warmgray-100">
+                        <p className="text-sm font-semibold text-slate-800 truncate">
+                          {localStorage.getItem('fullName') || 'User'}
+                        </p>
+                        <p className="text-xs text-warmgray-500 capitalize">
+                          {role?.toLowerCase() || 'user'}
+                        </p>
+                      </div>
+                      <Link
+                        to="/profile"
+                        onClick={() => setAccountOpen(false)}
+                        className="block px-4 py-2.5 text-sm text-slate-700 hover:bg-brand-50 hover:text-brand-700 transition"
+                      >
+                        My Profile
+                      </Link>
+                      {role === 'ADMIN' && (
+                        <Link
+                          to="/admin/dashboard"
+                          onClick={() => setAccountOpen(false)}
+                          className="block px-4 py-2.5 text-sm text-slate-700 hover:bg-brand-50 hover:text-brand-700 transition"
+                        >
+                          Admin Dashboard
+                        </Link>
+                      )}
+                      <button
+                        onClick={handleLogout}
+                        className="flex items-center gap-2 w-full text-left px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 transition border-t border-warmgray-100"
+                      >
+                        <FaSignOutAlt className="text-xs" /> Logout
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* Mobile toggle */}
+            <button
+              onClick={() => setMenuOpen(!menuOpen)}
+              className="md:hidden p-2 rounded-lg text-slate-700 hover:bg-warmgray-100 transition"
+            >
+              {menuOpen ? <FaTimes className="text-xl" /> : <FaBars className="text-xl" />}
+            </button>
+          </div>
         </div>
       </div>
 
       {/* Mobile Menu */}
       {menuOpen && (
-        <div className="md:hidden bg-white border-t border-gray-100 py-4">
-          <div className="container mx-auto px-4 space-y-2">
-            <Link to="/" className="block text-gray-700 hover:text-blue-600">Home</Link>
-            <Link to="/professionals" className="block text-gray-700 hover:text-blue-600">Professionals</Link>
-            <Link to="/projects" className="block text-gray-700 hover:text-blue-600">Projects</Link>
-            
+        <div className="md:hidden bg-white border-t border-warmgray-200 py-4">
+          <div className="max-w-7xl mx-auto px-4 space-y-1">
+            <Link to="/" onClick={() => setMenuOpen(false)} className="block px-4 py-2.5 rounded-lg text-slate-700 hover:bg-brand-50 hover:text-brand-700 transition">Home</Link>
+            <Link to="/professionals" onClick={() => setMenuOpen(false)} className="block px-4 py-2.5 rounded-lg text-slate-700 hover:bg-brand-50 hover:text-brand-700 transition">Professionals</Link>
+            <Link to="/projects" onClick={() => setMenuOpen(false)} className="block px-4 py-2.5 rounded-lg text-slate-700 hover:bg-brand-50 hover:text-brand-700 transition">Projects</Link>
+
             {role === 'ADMIN' && (
-              <Link to="/admin/dashboard" className="block text-orange-600 font-bold">Admin</Link>
+              <Link to="/admin/dashboard" onClick={() => setMenuOpen(false)} className="block px-4 py-2.5 rounded-lg font-semibold text-brand-700 bg-brand-50">
+                Admin Dashboard
+              </Link>
             )}
 
             {isLoggedIn && role === 'HOMEOWNER' && (
               <>
-                <Link to="/post-project" className="block text-blue-600 font-bold">+ Post Project</Link>
-                <Link to="/my-projects" className="block text-gray-700">My Projects</Link>
+                <Link to="/post-project" onClick={() => setMenuOpen(false)} className="block px-4 py-2.5 rounded-lg font-semibold text-brand-700 bg-brand-50">+ Post Project</Link>
+                <Link to="/my-projects" onClick={() => setMenuOpen(false)} className="block px-4 py-2.5 rounded-lg text-slate-700 hover:bg-warmgray-50 transition">My Projects</Link>
               </>
             )}
 
             {isLoggedIn && role === 'PROFESSIONAL' && (
               <>
-                <Link to="/portfolio" className="block text-gray-700">Portfolio</Link>
-                <Link to="/my-bids" className="block text-gray-700">My Bids</Link>
+                <Link to="/portfolio" onClick={() => setMenuOpen(false)} className="block px-4 py-2.5 rounded-lg text-slate-700 hover:bg-warmgray-50 transition">Portfolio</Link>
+                <Link to="/my-bids" onClick={() => setMenuOpen(false)} className="block px-4 py-2.5 rounded-lg text-slate-700 hover:bg-warmgray-50 transition">My Bids</Link>
               </>
             )}
 
             {isLoggedIn && (
               <>
-                <Link to="/profile" className="block text-gray-700">My Profile</Link>
-                <button onClick={handleLogout} className="block text-red-600 font-bold">Logout</button>
+                <Link to="/profile" onClick={() => setMenuOpen(false)} className="block px-4 py-2.5 rounded-lg text-slate-700 hover:bg-warmgray-50 transition">My Profile</Link>
+                <button onClick={handleLogout} className="flex items-center gap-2 w-full text-left px-4 py-2.5 rounded-lg text-red-600 hover:bg-red-50 transition">
+                  <FaSignOutAlt className="text-xs" /> Logout
+                </button>
               </>
             )}
 
             {!isLoggedIn && (
-              <>
-                <Link to="/login" className="block text-gray-700">Login</Link>
-                <Link to="/register" className="block bg-blue-600 text-white px-4 py-2 rounded-lg text-center">Register</Link>
-              </>
+              <div className="pt-2 space-y-2">
+                <Link to="/login" onClick={() => setMenuOpen(false)} className="block px-4 py-2.5 rounded-lg text-slate-700 hover:bg-warmgray-50 transition">Login</Link>
+                <Link to="/register" onClick={() => setMenuOpen(false)} className="block px-4 py-2.5 rounded-lg bg-brand-600 text-white text-center font-semibold">Register</Link>
+              </div>
             )}
           </div>
         </div>
