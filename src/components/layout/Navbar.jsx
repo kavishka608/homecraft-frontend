@@ -35,12 +35,18 @@ const Navbar = () => {
     localStorage.removeItem('role');
     localStorage.removeItem('userId');
     localStorage.removeItem('fullName');
+    localStorage.removeItem('email');
     setIsLoggedIn(false);
     setRole(null);
     setAccountOpen(false);
     setMenuOpen(false);
     navigate('/');
   };
+
+  // Treat CLIENT and HOMEOWNER as same role
+  const isClient = role === 'CLIENT' || role === 'HOMEOWNER';
+  const isProfessional = role === 'PROFESSIONAL';
+  const isAdmin = role === 'ADMIN';
 
   return (
     <nav className="sticky top-0 z-50 bg-warmgray-50/80 backdrop-blur-md border-b border-warmgray-200">
@@ -78,7 +84,8 @@ const Navbar = () => {
               Projects
             </Link>
 
-            {role === 'ADMIN' && (
+            {/* Admin Link */}
+            {isAdmin && (
               <Link
                 to="/admin/dashboard"
                 className="px-4 py-1.5 rounded-full text-sm font-semibold text-brand-700 bg-brand-100 hover:bg-brand-200 transition"
@@ -87,24 +94,18 @@ const Navbar = () => {
               </Link>
             )}
 
-            {isLoggedIn && role === 'HOMEOWNER' && (
-              <>
-                <Link
-                  to="/post-project"
-                  className="px-4 py-1.5 rounded-full text-sm font-semibold text-brand-700 bg-brand-100 hover:bg-brand-200 transition"
-                >
-                  + Post Project
-                </Link>
-                <Link
-                  to="/my-projects"
-                  className="px-4 py-1.5 rounded-full text-sm font-medium text-slate-700 hover:bg-white hover:text-brand-700 hover:shadow-soft transition"
-                >
-                  My Projects
-                </Link>
-              </>
+            {/* Client Links — Post Project ONLY */}
+            {isLoggedIn && isClient && (
+              <Link
+                to="/post-project"
+                className="px-4 py-1.5 rounded-full text-sm font-semibold text-brand-700 bg-brand-100 hover:bg-brand-200 transition"
+              >
+                + Post Project
+              </Link>
             )}
 
-            {isLoggedIn && role === 'PROFESSIONAL' && (
+            {/* Professional Links */}
+            {isLoggedIn && isProfessional && (
               <>
                 <Link
                   to="/portfolio"
@@ -184,7 +185,7 @@ const Navbar = () => {
                       >
                         My Profile
                       </Link>
-                      {role === 'ADMIN' && (
+                      {isAdmin && (
                         <Link
                           to="/admin/dashboard"
                           onClick={() => setAccountOpen(false)}
@@ -224,20 +225,23 @@ const Navbar = () => {
             <Link to="/professionals" onClick={() => setMenuOpen(false)} className="block px-4 py-2.5 rounded-lg text-slate-700 hover:bg-brand-50 hover:text-brand-700 transition">Professionals</Link>
             <Link to="/projects" onClick={() => setMenuOpen(false)} className="block px-4 py-2.5 rounded-lg text-slate-700 hover:bg-brand-50 hover:text-brand-700 transition">Projects</Link>
 
-            {role === 'ADMIN' && (
+            {isAdmin && (
               <Link to="/admin/dashboard" onClick={() => setMenuOpen(false)} className="block px-4 py-2.5 rounded-lg font-semibold text-brand-700 bg-brand-50">
                 Admin Dashboard
               </Link>
             )}
 
-            {isLoggedIn && role === 'HOMEOWNER' && (
-              <>
-                <Link to="/post-project" onClick={() => setMenuOpen(false)} className="block px-4 py-2.5 rounded-lg font-semibold text-brand-700 bg-brand-50">+ Post Project</Link>
-                <Link to="/my-projects" onClick={() => setMenuOpen(false)} className="block px-4 py-2.5 rounded-lg text-slate-700 hover:bg-warmgray-50 transition">My Projects</Link>
-              </>
+            {isLoggedIn && isClient && (
+              <Link
+                to="/post-project"
+                onClick={() => setMenuOpen(false)}
+                className="block px-4 py-2.5 rounded-lg font-semibold text-brand-700 bg-brand-50"
+              >
+                + Post Project
+              </Link>
             )}
 
-            {isLoggedIn && role === 'PROFESSIONAL' && (
+            {isLoggedIn && isProfessional && (
               <>
                 <Link to="/portfolio" onClick={() => setMenuOpen(false)} className="block px-4 py-2.5 rounded-lg text-slate-700 hover:bg-warmgray-50 transition">Portfolio</Link>
                 <Link to="/my-bids" onClick={() => setMenuOpen(false)} className="block px-4 py-2.5 rounded-lg text-slate-700 hover:bg-warmgray-50 transition">My Bids</Link>

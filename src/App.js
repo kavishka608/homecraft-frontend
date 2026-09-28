@@ -6,6 +6,7 @@ import './App.css';
 // Layout
 import Navbar from './components/layout/Navbar';
 import Footer from './components/layout/Footer';
+import AdminLayout from './components/layout/AdminLayout';
 
 // Public pages
 import Home from './pages/Home';
@@ -18,13 +19,15 @@ import ProfessionalProfile from './pages/ProfessionalProfile';
 // Role-specific pages
 import Profile from './pages/Profile';
 import PostProject from './pages/PostProject';
-import MyProjects from './pages/MyProjects';
 import MyBids from './pages/MyBids';
 import PortfolioUpload from './pages/PortfolioUpload';
 
 // Admin pages
 import AdminDashboard from './pages/AdminDashboard';
 import AdminApprovals from './pages/AdminApprovals';
+import AdminUsers from './pages/AdminUsers';
+import AdminProjects from './pages/AdminProjects';
+import AdminSettings from './pages/AdminSettings';
 
 // ============ Protected route wrapper ============
 const ProtectedRoute = ({ children, allowedRoles }) => {
@@ -52,90 +55,105 @@ function App() {
   return (
     <Router>
       <Toaster position="top-right" />
-      <div className="flex flex-col min-h-screen">
-        <Navbar />
-        <main className="flex-grow">
-          <Routes>
 
-            {/* ============ PUBLIC ============ */}
-            <Route path="/" element={<Home />} />
-            <Route path="/professionals" element={<Professionals />} />
-            <Route path="/professionals/:id" element={<ProfessionalProfile />} />
-            <Route path="/projects" element={<Projects />} />
-            <Route path="/login" element={<Login />} />
-            <Route path="/register" element={<Register />} />
+      <Routes>
 
-            {/* ============ CLIENT ============ */}
-            <Route
-              path="/post-project"
-              element={
-                <ProtectedRoute allowedRoles={['CLIENT', 'HOMEOWNER']}>
-                  <PostProject />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/my-projects"
-              element={
-                <ProtectedRoute allowedRoles={['CLIENT', 'HOMEOWNER']}>
-                  <MyProjects />
-                </ProtectedRoute>
-              }
-            />
+        {/* ============================================ */}
+        {/* ADMIN ROUTES — with shared sidebar layout */}
+        {/* ============================================ */}
+        <Route
+          path="/admin"
+          element={
+            <ProtectedRoute allowedRoles={['ADMIN']}>
+              <AdminLayout />
+            </ProtectedRoute>
+          }
+        >
+          <Route index element={<Navigate to="/admin/dashboard" replace />} />
+          <Route path="dashboard" element={<AdminDashboard />} />
+          <Route path="approvals" element={<AdminApprovals />} />
+          <Route path="users" element={<AdminUsers />} />
+          <Route path="projects" element={<AdminProjects />} />
+          <Route path="settings" element={<AdminSettings />} />
+        </Route>
 
-            {/* ============ PROFESSIONAL ============ */}
-            <Route
-              path="/my-bids"
-              element={
-                <ProtectedRoute allowedRoles={['PROFESSIONAL']}>
-                  <MyBids />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/portfolio"
-              element={
-                <ProtectedRoute allowedRoles={['PROFESSIONAL']}>
-                  <PortfolioUpload />
-                </ProtectedRoute>
-              }
-            />
+        {/* ============================================ */}
+        {/* PUBLIC + CLIENT + PROFESSIONAL ROUTES */}
+        {/* ============================================ */}
+        <Route
+          path="/*"
+          element={
+            <div className="flex flex-col min-h-screen">
+              <Navbar />
+              <main className="flex-grow">
+                <Routes>
 
-            {/* ============ SHARED (any logged-in user) ============ */}
-            <Route
-              path="/profile"
-              element={
-                <ProtectedRoute>
-                  <Profile />
-                </ProtectedRoute>
-              }
-            />
+                  {/* Public */}
+                  <Route path="/" element={<Home />} />
+                  <Route path="/professionals" element={<Professionals />} />
+                  <Route path="/professionals/:id" element={<ProfessionalProfile />} />
+                  <Route path="/login" element={<Login />} />
+                  <Route path="/register" element={<Register />} />
 
-            {/* ============ ADMIN ============ */}
-            <Route
-              path="/admin/dashboard"
-              element={
-                <ProtectedRoute allowedRoles={['ADMIN']}>
-                  <AdminDashboard />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/admin/approvals"
-              element={
-                <ProtectedRoute allowedRoles={['ADMIN']}>
-                  <AdminApprovals />
-                </ProtectedRoute>
-              }
-            />
+                  {/* Projects */}
+                  <Route
+                    path="/projects"
+                    element={
+                      <ProtectedRoute allowedRoles={['CLIENT', 'HOMEOWNER', 'PROFESSIONAL', 'ADMIN']}>
+                        <Projects />
+                      </ProtectedRoute>
+                    }
+                  />
 
-            {/* ============ FALLBACK ============ */}
-            <Route path="*" element={<Navigate to="/" replace />} />
+                  {/* Client */}
+                  <Route
+                    path="/post-project"
+                    element={
+                      <ProtectedRoute allowedRoles={['CLIENT', 'HOMEOWNER']}>
+                        <PostProject />
+                      </ProtectedRoute>
+                    }
+                  />
 
-          </Routes>
-        </main>
-        <Footer />
-      </div>
+                  {/* Professional */}
+                  <Route
+                    path="/my-bids"
+                    element={
+                      <ProtectedRoute allowedRoles={['PROFESSIONAL']}>
+                        <MyBids />
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="/portfolio"
+                    element={
+                      <ProtectedRoute allowedRoles={['PROFESSIONAL']}>
+                        <PortfolioUpload />
+                      </ProtectedRoute>
+                    }
+                  />
+
+                  {/* Shared */}
+                  <Route
+                    path="/profile"
+                    element={
+                      <ProtectedRoute>
+                        <Profile />
+                      </ProtectedRoute>
+                    }
+                  />
+
+                  {/* Fallback */}
+                  <Route path="*" element={<Navigate to="/" replace />} />
+
+                </Routes>
+              </main>
+              <Footer />
+            </div>
+          }
+        />
+
+      </Routes>
     </Router>
   );
 }

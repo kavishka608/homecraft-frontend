@@ -1,147 +1,159 @@
 import React, { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
-import axios from 'axios';
-import { FaSearch, FaFolder, FaLock, FaCog, FaUser, FaShieldAlt, FaHome } from 'react-icons/fa';
+import { FaUsers, FaUserCheck, FaClock, FaProjectDiagram } from 'react-icons/fa';
+import api from '../services/api';
 
 const AdminDashboard = () => {
-  const [users, setUsers] = useState([]);
+  const [stats, setStats] = useState({
+    totalUsers: 0,
+    totalProfessionals: 0,
+    totalClients: 0,
+    totalProjects: 0,
+    pendingApprovals: 0,
+  });
   const [loading, setLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState('');
 
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const usersResponse = await axios.get('http://localhost:8080/api/admin/pending-professionals');
-        
-        // If it's wrapped in response.data, use that, otherwise use the array directly
-        setUsers(Array.isArray(usersResponse.data) ? usersResponse.data : usersResponse.data.data || []);
-        
-      } catch (error) {
-        console.error("Error fetching admin data:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchData();
+    fetchStats();
   }, []);
 
-  // Filter users based on search
-  const filteredUsers = users.filter((user) =>
-    (user.fullName || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
-    (user.email || '').toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const fetchStats = async () => {
+    try {
+      // Fetch users (proven to work from Users page)
+      const usersRes = await api.get('/admin/users').catch(() => ({ data: { data: [] } }));
+      const users = usersRes.data?.data || [];
 
-  // Get counts
-  const pendingCount = users.filter(u => u.verificationStatus === 'PENDING').length;
-  const approvedCount = users.filter(u => u.verificationStatus === 'APPROVED').length;
+      // Fetch all projects
+      const projectsRes = await api.get('/projects').catch(() => ({ data: { data: [] } }));
+      const projects = projectsRes.data?.data || [];
 
-  if (loading) {
-    return <div className="min-h-screen flex justify-center items-center text-2xl text-gray-500">Loading Dashboard...</div>;
-  }
+      // Fetch pending approvals
+      const [pendPros, pendProjs] = await Promise.all([
+        api.get('/admin/pending-professionals').catch(() => ({ data: { data: [] } })),
+        api.get('/admin/pending-projects').catch(() => ({ data: { data: [] } })),
+      ]);
+
+      const pendingPros = pendPros.data?.data?.length || 0;
+      const pendingProjs = pendProjs.data?.data?.length || 0;
+
+      const totalProfessionals = users.filter(u => u.role === 'PROFESSIONAL').length;
+      const totalClients = users.filter(u => u.role === 'CLIENT' || u.role === 'HOMEOWNER').length;
+
+      setStats({
+        totalUsers: users.length,
+        totalProfessionals,
+        totalClients,
+        totalProjects: projects.length,
+        pendingApprovals: pendingPros + pendingProjs,
+      });
+    } catch (error) {
+      console.error('Stats fetch error:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const cards = [
+    {
+      label: 'Total Users',
+      value: stats.totalUsers,
+      icon: FaUsers,
+      color: 'bg-blue-600',
+      hint: `${stats.totalClients} clients · ${stats.totalProfessionals} pros`,
+    },
+    {
+      label: 'Professionals',
+      value: stats.totalProfessionals,
+      icon: FaUserCheck,
+      color: 'bg-green-600',
+      hint: 'Registered professionals',
+    },
+    {
+      label: 'Total Projects',
+      value: stats.totalProjects,
+      icon: FaProjectDiagram,
+      color: 'bg-purple-600',
+      hint: 'All projects on platform',
+    },
+    {
+      label: 'Pending Approvals',
+      value: stats.pendingApprovals,
+      icon: FaClock,
+      color: 'bg-orange-500',
+      hint: 'Needs your review',
+    },
+  ];
 
   return (
-    <div className="flex min-h-screen bg-gray-100">
-      
-      {/* Left Sidebar (LastPass Style) */}
-      <aside className="w-64 bg-gray-800 text-white flex flex-col">
-        <div className="p-6 text-2xl font-bold border-b border-gray-700">
-          Home<span className="text-red-500">Craft</span>
+    <div>
+      {/* Top Bar */}
+      <div className="bg-white rounded-xl shadow-sm border border-gray-200 px-6 py-4 flex items-center justify-between mb-6">
+        <h1 className="text-2xl font-bold text-gray-800">Dashboard</h1>
+        <div className="flex items-center gap-2 px-3 py-1.5 bg-gray-100 rounded-lg">
+          <div className="w-6 h-6 rounded-full bg-amber-600 flex items-center justify-center text-white font-bold text-xs">
+            A
+          </div>
+          <span className="text-sm font-medium text-gray-700">Admin</span>
         </div>
-        
-        <nav className="flex-1 py-6">
-          <div className="w-full flex items-center gap-3 px-6 py-3 text-left text-white bg-gray-700 border-l-4 border-red-500 transition">
-            <FaShieldAlt /> Dashboard
-          </div>
-          <Link to="/admin/approvals" className="block w-full flex items-center gap-3 px-6 py-3 text-left text-gray-300 hover:bg-gray-700 transition">
-            <FaLock /> Approvals
-          </Link>
-          <div className="w-full flex items-center gap-3 px-6 py-3 text-left text-gray-300 hover:bg-gray-700 transition">
-            <FaUser /> Users
-          </div>
-          <div className="w-full flex items-center gap-3 px-6 py-3 text-left text-gray-300 hover:bg-gray-700 transition">
-            <FaFolder /> Projects
-          </div>
-          <div className="w-full flex items-center gap-3 px-6 py-3 text-left text-gray-300 hover:bg-gray-700 transition">
-            <FaCog /> Settings
-          </div>
-          <Link to="/" className="block w-full flex items-center gap-3 px-6 py-3 text-left text-gray-300 hover:bg-gray-700 transition">
-            <FaHome /> Frontend
-          </Link>
-        </nav>
+      </div>
 
-        <div className="p-6 border-t border-gray-700 text-sm text-gray-400">
-          Logged in as Admin
+      {/* KPI Cards */}
+      {loading ? (
+        <div className="bg-white rounded-xl shadow p-12 text-center text-gray-500">
+          Loading dashboard...
         </div>
-      </aside>
-
-      {/* Main Content Area */}
-      <main className="flex-1 p-8">
-        
-        {/* Top Bar with Search (LastPass Style) */}
-        <div className="bg-white rounded-xl shadow-md p-4 mb-8 flex items-center justify-between">
-          <h1 className="text-2xl font-bold text-gray-800">Vault</h1>
-          <div className="flex items-center gap-4">
-            <div className="relative w-72">
-              <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-              <input 
-                type="text" 
-                placeholder="Search users..." 
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500"
-              />
-            </div>
-            <div className="flex items-center gap-2 bg-gray-100 rounded-full px-4 py-2">
-              <FaUser className="text-gray-600" />
-              <span className="text-sm font-semibold text-gray-700">Admin</span>
-            </div>
-          </div>
-        </div>
-
-        {/* Quick Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-          <div className="bg-blue-600 text-white p-6 rounded-xl shadow-lg">
-            <p className="text-sm opacity-80">Total Users</p>
-            <p className="text-3xl font-bold mt-2">{users.length}</p>
-          </div>
-          <div className="bg-green-600 text-white p-6 rounded-xl shadow-lg">
-            <p className="text-sm opacity-80">Active Professionals</p>
-            <p className="text-3xl font-bold mt-2">{approvedCount}</p>
-          </div>
-          <div className="bg-orange-500 text-white p-6 rounded-xl shadow-lg">
-            <p className="text-sm opacity-80">Pending Approvals</p>
-            <p className="text-3xl font-bold mt-2">{pendingCount}</p>
-          </div>
-        </div>
-
-        {/* Grid of Cards (LastPass Style) */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-          {filteredUsers.length === 0 ? (
-            <p className="text-gray-500 col-span-full text-center py-10">No users found.</p>
-          ) : (
-            filteredUsers.map((user) => (
-              <div key={user.id} className="bg-white rounded-xl shadow-md hover:shadow-xl transition p-6 border border-gray-200">
-                <div className="flex items-center justify-between mb-4">
-                  <div className="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center">
-                    <FaUser className="text-blue-600 text-xl" />
-                  </div>
-                  <span className={`text-xs font-bold px-2 py-1 rounded-full ${
-                    user.verificationStatus === 'APPROVED' ? 'bg-green-100 text-green-700' : 'bg-orange-100 text-orange-600'
-                  }`}>
-                    {user.verificationStatus || 'Active'}
-                  </span>
+      ) : (
+        <>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+            {cards.map(({ label, value, icon: Icon, color, hint }) => (
+              <div key={label} className={`${color} text-white rounded-xl shadow p-6`}>
+                <div className="flex items-center justify-between mb-3">
+                  <span className="text-sm font-medium opacity-90">{label}</span>
+                  <Icon className="text-xl opacity-80" />
                 </div>
-                <h3 className="font-bold text-gray-800 text-lg">{user.fullName || 'Unknown'}</h3>
-                <p className="text-sm text-gray-500 mb-4">{user.professionalType || 'User'}</p>
-                <div className="border-t border-gray-100 pt-3">
-                  <p className="text-xs text-gray-400 truncate">{user.email}</p>
-                </div>
+                <div className="text-4xl font-bold">{value}</div>
+                <div className="text-xs opacity-75 mt-2">{hint}</div>
               </div>
-            ))
-          )}
-        </div>
-      </main>
+            ))}
+          </div>
+
+          {/* Quick Actions */}
+          <div className="bg-white rounded-xl shadow p-6">
+            <h2 className="text-lg font-bold text-gray-800 mb-4">Quick Actions</h2>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <a
+                href="/admin/approvals"
+                className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-amber-500 hover:bg-amber-50 transition"
+              >
+                <FaClock className="text-3xl text-amber-600 mx-auto mb-2" />
+                <div className="font-semibold text-gray-800">Review Approvals</div>
+                <div className="text-xs text-gray-500 mt-1">
+                  {stats.pendingApprovals} pending
+                </div>
+              </a>
+              <a
+                href="/admin/users"
+                className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-blue-500 hover:bg-blue-50 transition"
+              >
+                <FaUsers className="text-3xl text-blue-600 mx-auto mb-2" />
+                <div className="font-semibold text-gray-800">Manage Users</div>
+                <div className="text-xs text-gray-500 mt-1">
+                  {stats.totalUsers} total
+                </div>
+              </a>
+              <a
+                href="/admin/projects"
+                className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-purple-500 hover:bg-purple-50 transition"
+              >
+                <FaProjectDiagram className="text-3xl text-purple-600 mx-auto mb-2" />
+                <div className="font-semibold text-gray-800">View Projects</div>
+                <div className="text-xs text-gray-500 mt-1">
+                  {stats.totalProjects} total
+                </div>
+              </a>
+            </div>
+          </div>
+        </>
+      )}
     </div>
   );
 };
