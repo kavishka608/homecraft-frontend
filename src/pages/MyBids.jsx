@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
-import { FaDollarSign, FaClock, FaCheckCircle, FaTimesCircle } from 'react-icons/fa';
+import { FaClock, FaDollarSign } from 'react-icons/fa';
 
 const MyBids = () => {
   const [bids, setBids] = useState([]); // Start with empty array

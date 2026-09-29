@@ -21,7 +21,7 @@ const Profile = () => {
     profilePicture: null,
   });
 
-  const [role, setRole] = useState(localStorage.getItem('role') || '');
+  const [role] = useState(localStorage.getItem('role') || '');
   const [isProfessional, setIsProfessional] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -382,7 +382,7 @@ const Profile = () => {
           </form>
         </div>
       </div>
-    </div>
+    </div>  
   );
 };
 
