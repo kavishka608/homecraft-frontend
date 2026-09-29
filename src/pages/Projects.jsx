@@ -3,17 +3,23 @@ import { Link } from 'react-router-dom';
 import {
   FaClock, FaCheckCircle, FaTimesCircle, FaPlus,
   FaMapMarkerAlt, FaDollarSign, FaTrash,
-  FaHourglassHalf, FaClipboardCheck, FaGavel, FaTimes
+  FaHourglassHalf, FaClipboardCheck, FaGavel, FaTimes, FaEye
 } from 'react-icons/fa';
 import api from '../services/api';
-import toast from 'react-hot-toast';
+import ConfirmModal from '../components/common/ConfirmModal';
+import {
+  toastDeleted,
+  toastError,
+  toastBidSubmitted,
+  toastNetworkError,
+} from '../utils/toast';
 
 const Projects = () => {
   const [projects, setProjects] = useState([]);
   const [loading, setLoading] = useState(true);
   const [deleting, setDeleting] = useState(null);
+  const [deleteConfirm, setDeleteConfirm] = useState({ open: false, id: null });
 
-  // Bid modal state
   const [bidModalOpen, setBidModalOpen] = useState(false);
   const [selectedProject, setSelectedProject] = useState(null);
   const [bidForm, setBidForm] = useState({
@@ -42,42 +48,44 @@ const Projects = () => {
       else setProjects([]);
     } catch (error) {
       console.error(error);
+      toastNetworkError();
       setProjects([]);
     } finally {
       setLoading(false);
     }
   };
 
-  const handleDelete = async (id) => {
-    if (!window.confirm('Delete this project?')) return;
+  // Ask for confirmation
+  const askDelete = (id) => {
+    setDeleteConfirm({ open: true, id });
+  };
+
+  // Confirm + delete
+  const handleDeleteConfirm = async () => {
+    const id = deleteConfirm.id;
+    setDeleteConfirm({ open: false, id: null });
     setDeleting(id);
     try {
       await api.delete(`/projects/${id}`);
-      setProjects(projects.filter(p => p.id !== id));
-      toast.success('Project deleted');
-    } catch {
-      toast.error('Failed to delete');
+      setProjects(projects.filter((p) => p.id !== id));
+      toastDeleted('Project');
+    } catch (error) {
+      toastError('Failed to delete project. Please try again.');
     } finally {
       setDeleting(null);
     }
   };
 
-  // Open bid modal
   const openBidModal = (project) => {
     setSelectedProject(project);
-    setBidForm({
-      bidAmount: '',
-      estimatedDays: '',
-      message: '',
-    });
+    setBidForm({ bidAmount: '', estimatedDays: '', message: '' });
     setBidModalOpen(true);
   };
 
-  // Submit bid
   const handleSubmitBid = async (e) => {
     e.preventDefault();
     if (!bidForm.bidAmount || !bidForm.estimatedDays) {
-      toast.error('Please fill all required fields');
+      toastError('Please fill in both amount and days.');
       return;
     }
     setSubmitting(true);
@@ -87,12 +95,17 @@ const Projects = () => {
         estimatedDays: Number(bidForm.estimatedDays),
         message: bidForm.message,
       });
-      toast.success('Bid submitted successfully!');
+      toastBidSubmitted();
       setBidModalOpen(false);
       setSelectedProject(null);
     } catch (error) {
       console.error(error);
-      toast.error(error.response?.data?.message || 'Failed to submit bid');
+      const msg = error.response?.data?.message;
+      if (msg?.toLowerCase().includes('already')) {
+        toastError('You already submitted a bid on this project.');
+      } else {
+        toastError('Failed to submit bid. Please try again.');
+      }
     } finally {
       setSubmitting(false);
     }
@@ -171,7 +184,6 @@ const Projects = () => {
   return (
     <div className="min-h-screen bg-gray-50 py-10 px-4">
       <div className="max-w-5xl mx-auto">
-
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
           <div>
@@ -204,9 +216,11 @@ const Projects = () => {
               >
                 <div className="flex justify-between items-start gap-4">
                   <div className="flex-1 min-w-0">
-                    <h2 className="text-xl font-bold text-gray-800 truncate">
-                      {project.title}
-                    </h2>
+                    <Link to={`/projects/${project.id}`}>
+                      <h2 className="text-xl font-bold text-gray-800 hover:text-amber-600 transition truncate cursor-pointer">
+                        {project.title}
+                      </h2>
+                    </Link>
                     <p className="text-gray-600 mt-1 line-clamp-2">{project.description}</p>
 
                     <div className="flex flex-wrap items-center gap-4 text-sm text-gray-500 mt-3">
@@ -228,25 +242,31 @@ const Projects = () => {
                   <div className="flex flex-col items-end gap-3 shrink-0">
                     {renderStatusBadge(project)}
 
-                    {/* Professional: Place Bid button */}
+                    {isClient && (
+                      <>
+                        <Link
+                          to={`/projects/${project.id}`}
+                          className="inline-flex items-center gap-1.5 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 text-sm font-medium shadow transition"
+                        >
+                          <FaEye className="text-xs" /> View Bids
+                        </Link>
+                        <button
+                          onClick={() => askDelete(project.id)}
+                          disabled={deleting === project.id}
+                          className="inline-flex items-center gap-1 text-gray-400 hover:text-red-600 text-sm font-medium transition disabled:opacity-50"
+                        >
+                          <FaTrash className="text-xs" />
+                          {deleting === project.id ? 'Deleting...' : 'Delete'}
+                        </button>
+                      </>
+                    )}
+
                     {isProfessional && project.status === 'OPEN' && project.approved === true && (
                       <button
                         onClick={() => openBidModal(project)}
                         className="inline-flex items-center gap-1.5 bg-amber-600 text-white px-4 py-2 rounded-lg hover:bg-amber-700 text-sm font-medium shadow transition"
                       >
                         <FaGavel className="text-xs" /> Place Bid
-                      </button>
-                    )}
-
-                    {/* Client: Delete button */}
-                    {isClient && (
-                      <button
-                        onClick={() => handleDelete(project.id)}
-                        disabled={deleting === project.id}
-                        className="inline-flex items-center gap-1 text-gray-400 hover:text-red-600 text-sm font-medium transition disabled:opacity-50"
-                      >
-                        <FaTrash className="text-xs" />
-                        {deleting === project.id ? 'Deleting...' : 'Delete'}
                       </button>
                     )}
                   </div>
@@ -257,12 +277,22 @@ const Projects = () => {
         )}
       </div>
 
-      {/* ============ BID MODAL ============ */}
+      {/* Confirm Delete Modal */}
+      <ConfirmModal
+        isOpen={deleteConfirm.open}
+        title="Delete Project?"
+        message="This will permanently remove the project and all its bids. This action cannot be undone."
+        confirmText="Yes, Delete"
+        cancelText="Cancel"
+        confirmColor="red"
+        onConfirm={handleDeleteConfirm}
+        onCancel={() => setDeleteConfirm({ open: false, id: null })}
+      />
+
+      {/* Bid Modal */}
       {bidModalOpen && selectedProject && (
         <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
           <div className="bg-white rounded-2xl shadow-xl max-w-lg w-full p-6 relative">
-
-            {/* Close */}
             <button
               onClick={() => setBidModalOpen(false)}
               className="absolute top-4 right-4 text-gray-400 hover:text-gray-700"
@@ -270,7 +300,6 @@ const Projects = () => {
               <FaTimes />
             </button>
 
-            {/* Header */}
             <div className="mb-6">
               <h2 className="text-2xl font-bold text-gray-800 flex items-center gap-2">
                 <FaGavel className="text-amber-600" /> Place Your Bid
@@ -283,7 +312,6 @@ const Projects = () => {
               </p>
             </div>
 
-            {/* Form */}
             <form onSubmit={handleSubmitBid} className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">

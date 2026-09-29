@@ -12,6 +12,7 @@ import AdminLayout from './components/layout/AdminLayout';
 import Home from './pages/Home';
 import Professionals from './pages/Professionals';
 import Projects from './pages/Projects';
+import ProjectDetail from './pages/ProjectDetail';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import ProfessionalProfile from './pages/ProfessionalProfile';
@@ -54,7 +55,39 @@ const ProtectedRoute = ({ children, allowedRoles }) => {
 function App() {
   return (
     <Router>
-      <Toaster position="top-right" />
+      <Toaster
+        position="top-right"
+        toastOptions={{
+          duration: 3500,
+          style: {
+            background: '#ffffff',
+            color: '#1F2937',
+            padding: '14px 18px',
+            borderRadius: '12px',
+            boxShadow: '0 4px 20px rgba(0, 0, 0, 0.08)',
+            fontSize: '14px',
+            fontWeight: '500',
+            border: '1px solid #E5E7EB',
+            maxWidth: '420px',
+          },
+          success: {
+            iconTheme: {
+              primary: '#10B981',
+              secondary: '#ffffff',
+            },
+          },
+          error: {
+            iconTheme: {
+              primary: '#EF4444',
+              secondary: '#ffffff',
+            },
+            style: {
+              border: '1px solid #FECACA',
+              background: '#FEF2F2',
+            },
+          },
+        }}
+      />
 
       <Routes>
 
@@ -95,12 +128,22 @@ function App() {
                   <Route path="/login" element={<Login />} />
                   <Route path="/register" element={<Register />} />
 
-                  {/* Projects */}
+                  {/* Projects — list */}
                   <Route
                     path="/projects"
                     element={
                       <ProtectedRoute allowedRoles={['CLIENT', 'HOMEOWNER', 'PROFESSIONAL', 'ADMIN']}>
                         <Projects />
+                      </ProtectedRoute>
+                    }
+                  />
+
+                  {/* Project Detail */}
+                  <Route
+                    path="/projects/:id"
+                    element={
+                      <ProtectedRoute allowedRoles={['CLIENT', 'HOMEOWNER', 'ADMIN']}>
+                        <ProjectDetail />
                       </ProtectedRoute>
                     }
                   />
