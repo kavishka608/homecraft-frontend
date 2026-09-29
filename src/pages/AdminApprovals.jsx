@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import axios from 'axios';
 import { FaUserCheck, FaProjectDiagram } from 'react-icons/fa';
+import api from '../services/api';
 
 const AdminApprovals = () => {
   const [professionals, setProfessionals] = useState([]);
@@ -11,31 +11,23 @@ const AdminApprovals = () => {
   const token = localStorage.getItem('token');
 
   useEffect(() => {
-  fetchPendingData();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-}, [token]);
+    fetchPendingData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [token]);
 
   const fetchPendingData = async () => {
     try {
-      // Fetch Pending Professionals
-      const proResponse = await axios.get(
-        'http://localhost:8080/api/admin/pending-professionals',
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      if (proResponse.data.success) {
-        setProfessionals(proResponse.data.data);
-      }
+      const proResponse = await api.get('/admin/pending-professionals', {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (proResponse.data.success) setProfessionals(proResponse.data.data);
 
-      // Fetch Pending Projects
-      const projectResponse = await axios.get(
-        'http://localhost:8080/api/admin/pending-projects',
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      if (projectResponse.data.success) {
-        setProjects(projectResponse.data.data);
-      }
+      const projectResponse = await api.get('/admin/pending-projects', {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (projectResponse.data.success) setProjects(projectResponse.data.data);
     } catch (error) {
-      console.error("Error fetching data:", error);
+      console.error('Error fetching data:', error);
     } finally {
       setLoading(false);
     }
@@ -43,61 +35,53 @@ const AdminApprovals = () => {
 
   const handleApprovePro = async (id) => {
     try {
-      await axios.put(
-        `http://localhost:8080/api/admin/approve/${id}`,
-        {},
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      setProfessionals(professionals.filter(p => p.id !== id));
+      await api.put(`/admin/approve/${id}`, {}, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setProfessionals(professionals.filter((p) => p.id !== id));
       setMessage('Professional approved!');
       setTimeout(() => setMessage(''), 3000);
     } catch (error) {
-      console.error("Error approving professional:", error);
+      console.error('Error approving professional:', error);
     }
   };
 
   const handleRejectPro = async (id) => {
     try {
-      await axios.put(
-        `http://localhost:8080/api/admin/reject/${id}`,
-        {},
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      setProfessionals(professionals.filter(p => p.id !== id));
+      await api.put(`/admin/reject/${id}`, {}, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setProfessionals(professionals.filter((p) => p.id !== id));
       setMessage('Professional rejected!');
       setTimeout(() => setMessage(''), 3000);
     } catch (error) {
-      console.error("Error rejecting professional:", error);
+      console.error('Error rejecting professional:', error);
     }
   };
 
   const handleApproveProject = async (id) => {
     try {
-      await axios.put(
-        `http://localhost:8080/api/admin/projects/${id}/approve`,
-        {},
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      setProjects(projects.filter(p => p.id !== id));
+      await api.put(`/admin/projects/${id}/approve`, {}, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setProjects(projects.filter((p) => p.id !== id));
       setMessage('Project approved!');
       setTimeout(() => setMessage(''), 3000);
     } catch (error) {
-      console.error("Error approving project:", error);
+      console.error('Error approving project:', error);
     }
   };
 
   const handleRejectProject = async (id) => {
     try {
-      await axios.put(
-        `http://localhost:8080/api/admin/projects/${id}/reject`,
-        {},
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      setProjects(projects.filter(p => p.id !== id));
+      await api.put(`/admin/projects/${id}/reject`, {}, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setProjects(projects.filter((p) => p.id !== id));
       setMessage('Project rejected!');
       setTimeout(() => setMessage(''), 3000);
     } catch (error) {
-      console.error("Error rejecting project:", error);
+      console.error('Error rejecting project:', error);
     }
   };
 
@@ -120,7 +104,6 @@ const AdminApprovals = () => {
           </div>
         )}
 
-        {/* Pending Projects */}
         <div className="bg-white rounded-xl shadow-lg overflow-hidden mb-8">
           <div className="bg-blue-600 text-white px-6 py-3 font-bold flex items-center gap-2">
             <FaProjectDiagram /> Pending Project Approvals
@@ -159,7 +142,6 @@ const AdminApprovals = () => {
           )}
         </div>
 
-        {/* Pending Professionals */}
         <div className="bg-white rounded-xl shadow-lg overflow-hidden">
           <div className="bg-orange-500 text-white px-6 py-3 font-bold flex items-center gap-2">
             <FaUserCheck /> Pending Professional Approvals

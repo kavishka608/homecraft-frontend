@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from 'react';
-import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import {
   FaPhone, FaMapMarkerAlt, FaBriefcase, FaUser,
@@ -7,6 +6,7 @@ import {
   FaPencilAlt, FaKey, FaTimes
 } from 'react-icons/fa';
 import toast from 'react-hot-toast';
+import api from '../services/api';
 
 const Profile = () => {
   const navigate = useNavigate();
@@ -35,7 +35,7 @@ const Profile = () => {
       try {
         if (role === 'PROFESSIONAL') {
           setIsProfessional(true);
-          const response = await axios.get('http://localhost:8080/api/professionals/me', {
+          const response = await api.get('/professionals/me', {
             headers: { Authorization: `Bearer ${token}` },
           });
           if (response.data.success) setProfile(response.data.data);
@@ -82,24 +82,20 @@ const Profile = () => {
     if (e && e.preventDefault) e.preventDefault();
     try {
       if (role === 'PROFESSIONAL') {
-        await axios.put('http://localhost:8080/api/professionals/profile', profile, {
+        await api.put('/professionals/profile', profile, {
           headers: { Authorization: `Bearer ${token}` },
         });
 
         if (file) {
           const formData = new FormData();
           formData.append('file', file);
-          await axios.post(
-            'http://localhost:8080/api/professionals/upload-profile-picture',
-            formData,
-            {
-              headers: {
-                Authorization: `Bearer ${token}`,
-                'Content-Type': 'multipart/form-data',
-              },
-            }
-          );
-          const response = await axios.get('http://localhost:8080/api/professionals/me', {
+          await api.post('/professionals/upload-profile-picture', formData, {
+            headers: {
+              Authorization: `Bearer ${token}`,
+              'Content-Type': 'multipart/form-data',
+            },
+          });
+          const response = await api.get('/professionals/me', {
             headers: { Authorization: `Bearer ${token}` },
           });
           if (response.data.success) setProfile(response.data.data);
@@ -143,14 +139,10 @@ const Profile = () => {
   return (
     <div className="min-h-screen bg-gray-50 py-10 px-4">
       <div className="max-w-5xl mx-auto">
-
-        {/* Header */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
           <div>
             <h1 className="text-3xl font-bold text-gray-800">My Profile</h1>
-            <p className="text-gray-600 mt-1">
-              Manage your account settings and personal information
-            </p>
+            <p className="text-gray-600 mt-1">Manage your account settings and personal information</p>
           </div>
           <button
             onClick={() => toast('Password change coming soon', { icon: '🔐' })}
@@ -160,7 +152,6 @@ const Profile = () => {
           </button>
         </div>
 
-        {/* 4 Info Cards */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
           <div className="bg-white rounded-xl p-5 shadow border border-gray-200">
             <div className="flex items-center gap-2 text-gray-500 text-xs font-semibold tracking-wider uppercase mb-3">
@@ -199,14 +190,11 @@ const Profile = () => {
           </div>
         </div>
 
-        {/* Personal Details Card */}
         <div className="bg-white rounded-2xl shadow-md border border-gray-200 p-6 md:p-8">
           <div className="flex items-center justify-between mb-6 flex-wrap gap-3">
             <div>
               <h2 className="text-xl font-bold text-gray-800">Personal Details</h2>
-              <p className="text-gray-600 text-sm mt-1">
-                Update your personal information below
-              </p>
+              <p className="text-gray-600 text-sm mt-1">Update your personal information below</p>
             </div>
 
             {editing ? (
@@ -237,7 +225,6 @@ const Profile = () => {
             )}
           </div>
 
-          {/* Profile Picture (Professionals only) */}
           {isProfessional && (
             <div className="flex items-center gap-5 mb-8 pb-8 border-b border-gray-200">
               <img
@@ -248,20 +235,13 @@ const Profile = () => {
               <label className="cursor-pointer inline-flex items-center gap-2 px-4 py-2 bg-amber-50 border border-amber-300 text-amber-700 rounded-lg hover:bg-amber-100 text-sm font-medium">
                 <FaCamera className="text-xs" />
                 {file ? file.name : 'Change Photo'}
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={handleFileChange}
-                  className="hidden"
-                />
+                <input type="file" accept="image/*" onChange={handleFileChange} className="hidden" />
               </label>
             </div>
           )}
 
-          {/* Form */}
           <form onSubmit={handleSubmit}>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-
               <div>
                 <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
                   <FaUser className="text-gray-400 text-xs" /> Full Name
@@ -382,7 +362,7 @@ const Profile = () => {
           </form>
         </div>
       </div>
-    </div>  
+    </div>
   );
 };
 
